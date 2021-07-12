@@ -23,6 +23,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemisphere_images(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -106,6 +107,60 @@ def mars_facts():
 
     # conver the df to HTML format, add bootstrap
     return df.to_html()
+
+def hemisphere_images(browser):
+
+    # Use browser to visit the URL 
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+    # Parse the resulting html with soup
+    html = browser.html
+    img_soup = soup(html, 'html.parser')
+
+    # Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # Add try/except for error handling
+    try:
+        
+        # Write code to retrieve the image urls and titles for each hemisphere.
+        # Find the relative image url
+        descriptions = img_soup.find_all('div', class_='description')
+
+    except BaseException:
+        return None
+        
+        # Retrieve the urls to the websites of each hemisphere image
+        # and use the base URL to create absolute URLs
+    img_site_urls = []
+    for description in descriptions:
+        img_site = description.a['href'] 
+        img_site_urls.append(f'https://marshemispheres.com/{img_site}')
+
+    # loop through the websites contaning the full-resolution images,
+    for img_site_url in img_site_urls:
+        # create an empty dictionary to hold the image url and title
+        hemispheres = {}
+        # click the link
+        browser.visit(img_site_url)
+        # Parse the resulting html with soup
+        html = browser.html
+        img_soup = soup(html, 'html.parser')
+        # find the "Sample" image anchor tag, and get the "href"
+        href = img_soup.find('li').a['href']
+        # complete the absolute url and save it as the value for the 'img_url' key in the dictionary
+        hemispheres['img_url'] = f'https://marshemispheres.com/{href}'
+        # find the title of the image and save it as the value 
+        # for the 'title' key in the dictionary
+        hemispheres['title'] = img_soup.find('h2', class_ = 'title').text
+        # add the dictionary to the list created in step 2
+        hemisphere_image_urls.append(hemispheres)
+        # navigate back to the beginning to get the next hemisphere image
+        browser.back()        
+
+    # Return the list that holds the dictionary of each image url and title.
+    return hemisphere_image_urls
 
 if __name__ == "__main__":
     # If running as script, print scraped data
